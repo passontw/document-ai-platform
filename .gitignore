@@ -1,0 +1,9 @@
+.env
+
+# Docker volumes backup
+*.tar
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db

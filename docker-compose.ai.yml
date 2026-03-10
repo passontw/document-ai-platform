@@ -1,0 +1,40 @@
+networks:
+  ai:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  n8n_data:
+
+services:
+  ollama:
+    image: ollama/ollama
+    networks:
+      - ai
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+      OLLAMA_NUM_PARALLEL: 3
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n
+    networks:
+      - ai
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - ollama
+    environment:
+      N8N_HOST: 0.0.0.0
+      WEBHOOK_URL: http://${MAC_MINI_IP}:5678
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
+      OLLAMA_BASE_URL: http://ollama:11434
+    restart: unless-stopped
