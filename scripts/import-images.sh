@@ -1,24 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMPORT_DIR="${1:-./image-exports}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
+IMPORT_DIR="${1:-$REPO_DIR/image-exports}"
 
 if [ ! -d "$IMPORT_DIR" ]; then
   echo "錯誤：找不到目錄 '$IMPORT_DIR'"
   exit 1
 fi
 
-shopt -s nullglob
-TAR_FILES=("$IMPORT_DIR"/*.tar)
-
-if [ ${#TAR_FILES[@]} -eq 0 ]; then
-  echo "錯誤：$IMPORT_DIR 中沒有 .tar 檔案"
-  exit 1
+if [ -f "$IMPORT_DIR/checksums.sha256" ]; then
+  echo "驗證 checksums..."
+  (cd "$IMPORT_DIR" && sha256sum -c checksums.sha256) || {
+    echo "錯誤：checksum 驗證失敗，請確認檔案完整性"
+    exit 1
+  }
 fi
 
-for tar_file in "${TAR_FILES[@]}"; do
+imported=0
+
+shopt -s nullglob
+
+for tar_file in "$IMPORT_DIR"/*.tar; do
   echo "匯入 $tar_file..."
   docker load -i "$tar_file"
+  imported=$((imported + 1))
 done
 
-echo "完成：所有 images 已匯入"
+if [ -f "$IMPORT_DIR/images-appflowy.tar.gz" ]; then
+  echo "匯入 AppFlowy images ($IMPORT_DIR/images-appflowy.tar.gz)..."
+  docker load -i "$IMPORT_DIR/images-appflowy.tar.gz"
+  echo "已載入的 AppFlowy 相關 images："
+  docker images | grep -E "appflowyinc|redis|nginx" || true
+  imported=$((imported + 1))
+fi
+
+echo "完成：匯入 $imported 個封存檔"

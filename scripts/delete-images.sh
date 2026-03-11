@@ -9,8 +9,10 @@ while IFS= read -r line; do
   IMAGES+=("$line")
 done < <(
   docker compose \
+    -f "$REPO_DIR/docker-compose.basic.yml" \
     -f "$REPO_DIR/docker-compose.ai.yml" \
     -f "$REPO_DIR/docker-compose.penpot.yml" \
+    -f "$REPO_DIR/docker-compose.appflowy.yml" \
     config --images 2>/dev/null
 )
 

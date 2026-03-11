@@ -1,0 +1,46 @@
+networks:
+  backend:
+    name: platform-backend
+    external: true
+
+services:
+  appflowy_cloud:
+    image: appflowyinc/appflowy_cloud:latest
+    networks:
+      - backend
+    ports:
+      - "8000:8000"
+    environment:
+      APPFLOWY_ENVIRONMENT: production
+      APPFLOWY_DATABASE_URL: postgres://appflowy:${APPFLOWY_DB_PASSWORD}@platform-postgres/appflowy
+      APPFLOWY_REDIS_URI: redis://platform-valkey:6379/1
+      APPFLOWY_JWT_SECRET: ${APPFLOWY_JWT_SECRET}
+      APPFLOWY_GOTRUE_BASE_URL: http://gotrue:9999
+    depends_on:
+      - gotrue
+    restart: unless-stopped
+
+  gotrue:
+    image: appflowyinc/gotrue:latest
+    networks:
+      - backend
+    environment:
+      GOTRUE_SITE_URL: http://${MAC_MINI_IP}:8000
+      GOTRUE_JWT_SECRET: ${APPFLOWY_JWT_SECRET}
+      DATABASE_URL: postgres://appflowy:${APPFLOWY_DB_PASSWORD}@platform-postgres/gotrue
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    networks:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - appflowy_cloud
+      - gotrue
+    restart: unless-stopped
