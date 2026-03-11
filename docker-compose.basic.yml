@@ -9,7 +9,7 @@ volumes:
 
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     container_name: platform-postgres
     networks:
       - backend

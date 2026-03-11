@@ -50,7 +50,9 @@ services:
     networks:
       - backend
     environment:
+      <<: *penpot-common-env
       PENPOT_PUBLIC_URI: http://penpot-frontend:8080
+      PENPOT_REDIS_URI: redis://platform-valkey/0
     depends_on:
       - penpot-frontend
     restart: unless-stopped
