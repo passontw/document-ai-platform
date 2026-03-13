@@ -1,0 +1,115 @@
+# ===== 全域設定 =====
+global:
+  namespace: ai-services
+  createNamespace: true
+
+# ===== Ollama 設定 =====
+ollama:
+  image:
+    repository: ollama/ollama
+    tag: latest
+    # 離線部署時設為 Never
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  config:
+    host: "0.0.0.0"
+    numParallel: 3
+
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "4"
+
+  persistence:
+    enabled: true
+    # k3s 預設 StorageClass
+    storageClass: "local-path"
+    accessMode: ReadWriteOnce
+    size: 20Gi
+
+  healthCheck:
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 5
+
+  service:
+    type: ClusterIP
+    port: 11434
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ===== n8n 設定 =====
+n8n:
+  image:
+    repository: n8nio/n8n
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  config:
+    host: "0.0.0.0"
+    # 部署後需修改為實際的外部存取位址
+    webhookUrl: "http://n8n.example.local"
+
+  # Basic Auth 認證
+  auth:
+    enabled: true
+    user: admin
+    password: "change_me"
+    # 若要使用已存在的 Secret，填入名稱，將忽略上方 password
+    existingSecret: ""
+    existingSecretPasswordKey: "n8n-password"
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "2"
+
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+  healthCheck:
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 5678
+
+  ingress:
+    enabled: true
+    className: traefik
+    annotations: {}
+    hosts:
+      - host: n8n.example.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ===== NetworkPolicy 設定 =====
+# 注意：k3s 預設 Flannel CNI 不支援 NetworkPolicy
+# 需安裝 Calico 或 Cilium 才能生效
+networkPolicy:
+  enabled: true

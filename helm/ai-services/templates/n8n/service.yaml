@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ai-services.n8n.fullname" . }}
+  namespace: {{ include "ai-services.namespace" . }}
+  labels:
+    {{- include "ai-services.labels" . | nindent 4 }}
+    {{- include "ai-services.n8n.selectorLabels" . | nindent 4 }}
+spec:
+  type: {{ .Values.n8n.service.type }}
+  ports:
+    - port: {{ .Values.n8n.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ai-services.n8n.selectorLabels" . | nindent 4 }}

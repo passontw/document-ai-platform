@@ -1,0 +1,8 @@
+{{- if .Values.global.createNamespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "ai-services.namespace" . }}
+  labels:
+    {{- include "ai-services.labels" . | nindent 4 }}
+{{- end }}
