@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ai-services.n8n.fullname" . }}
+  namespace: {{ include "ai-services.namespace" . }}
+  labels:
+    {{- include "ai-services.labels" . | nindent 4 }}
+    {{- include "ai-services.n8n.selectorLabels" . | nindent 4 }}
+data:
+  N8N_HOST: {{ .Values.n8n.config.host | quote }}
+  WEBHOOK_URL: {{ .Values.n8n.config.webhookUrl | quote }}
+  N8N_BASIC_AUTH_ACTIVE: {{ .Values.n8n.auth.enabled | quote }}
+  N8N_BASIC_AUTH_USER: {{ .Values.n8n.auth.user | quote }}
+  OLLAMA_BASE_URL: {{ include "ai-services.ollama.url" . | quote }}
